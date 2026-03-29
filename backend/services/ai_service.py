@@ -10,9 +10,9 @@ from sympy.parsing.sympy_parser import (
     implicit_multiplication_application,
 )
 
-# -----------------------------------------------------------------------
-# LOAD AI MODEL
-# -----------------------------------------------------------------------
+# ---------------------------
+# MODEL SETUP
+# ---------------------------
 device = "cuda" if torch.cuda.is_available() else "cpu"
 MODEL_NAME = "google/flan-t5-small"
 
@@ -21,26 +21,34 @@ model = None
 
 def load_main_model():
     global tokenizer, model
-    if tokenizer is None or model is None:
-        print("🔄 Loading AI model...")
-        tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-        model = AutoModelForSeq2SeqLM.from_pretrained(
-            MODEL_NAME,
-            low_cpu_mem_usage=True
-        ).to(device)
-        model.eval()
-        print("✅ Model loaded successfully")
-
-# ✅ IMPORTANT: LOAD MODEL ON START
-load_main_model()
-
-# -----------------------------------------------------------------------
-# GENERATE TEXT
-# -----------------------------------------------------------------------
-def generate_text(prompt: str, max_new_tokens: int = 150) -> str | None:
     try:
+        if tokenizer is None or model is None:
+            print("🔄 Loading AI model...")
+            tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+            model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_NAME).to(device)
+            model.eval()
+            print("✅ Model loaded")
+    except Exception as e:
+        print("❌ Model load failed:", e)
+        tokenizer = None
+        model = None
+
+# ---------------------------
+# TEXT GENERATION
+# ---------------------------
+def generate_text(prompt: str, max_new_tokens: int = 150):
+    try:
+        load_main_model()  # ✅ lazy load
+
+        # fallback if model not available
+        if tokenizer is None or model is None:
+            return None
+
         inputs = tokenizer(
-            prompt, return_tensors="pt", truncation=True, max_length=512
+            prompt,
+            return_tensors="pt",
+            truncation=True,
+            max_length=512
         ).to(device)
 
         outputs = model.generate(
@@ -56,21 +64,26 @@ def generate_text(prompt: str, max_new_tokens: int = 150) -> str | None:
         print("AI Error:", e)
         return None
 
-# -----------------------------------------------------------------------
-# SIMPLE ANSWER FUNCTION (MAIN FIX)
-# -----------------------------------------------------------------------
-def generate_answer(question: str, session_id: str = "default", subject: str = "General") -> str:
-    
+# ---------------------------
+# MAIN ANSWER FUNCTION
+# ---------------------------
+def generate_answer(question: str, session_id="default", subject="General"):
+
     try:
-        prompt = f"Answer this clearly in simple terms:\n\nQuestion: {question}\nAnswer:"
+        prompt = f"Answer clearly in simple terms:\n\nQuestion: {question}\nAnswer:"
+
         answer = generate_text(prompt)
 
-        # ✅ fallback if model fails
+        # ✅ fallback if model fails (important)
         if not answer or len(answer.strip()) < 5:
-            return f"⚠️ AI could not generate answer. Try again.\n\n(Question was: {question})"
+            wiki = wikipedia.summary(question, sentences=2)
+            if wiki:
+                return f"📘 Answer:\n\n{wiki}"
 
-        return answer
+            return f"📘 Answer:\n\nSorry, I couldn't generate a detailed answer. Try rephrasing your question."
+
+        return f"📘 Answer:\n\n{answer}"
 
     except Exception as e:
-        print("Main AI Error:", e)
+        print("Main Error:", e)
         return "❌ Error generating answer"
