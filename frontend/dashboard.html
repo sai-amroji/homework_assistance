@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Homework Helper</title>
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="/css/dashboard.css">
   
 </head>
 <body>
@@ -292,7 +292,7 @@
     </div><!-- /.main -->
   </div><!-- /.layout -->
 
-  <script src="js/dashboard.js"></script>
+  <script src="/js/dashboard.js"></script>
 
   <script>
   /* ============================================================
@@ -393,7 +393,7 @@
     chatArea.scrollTop = chatArea.scrollHeight;
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/ask", {
+      const res = await fetch("ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question, subject: selectedSubject, session_id: currentChatId, user_id: localStorage.getItem("user_id") || null })
@@ -454,7 +454,7 @@
       formData.append("file", file);
       formData.append("question", question);
 
-      const res = await fetch("http://127.0.0.1:8000/ask-from-image", { method: "POST", body: formData });
+      const res = await fetch("/ask-from-image", { method: "POST", body: formData });
       if (!res.ok) { const e = await res.json(); throw new Error(e.detail || `Error ${res.status}`); }
 
       const data = await res.json();
