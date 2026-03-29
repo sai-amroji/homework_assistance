@@ -44,7 +44,15 @@ app.add_middleware(
 # PATHS
 # =========================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-FRONTEND_DIR = os.path.abspath(os.path.join(BASE_DIR, "../frontend"))
+FRONTEND_DIR = os.path.join(BASE_DIR, "..", "frontend")
+FRONTEND_DIR = os.path.abspath(FRONTEND_DIR)
+
+# =========================
+# ✅ STATIC FILES FIX (IMPORTANT)
+# =========================
+app.mount("/css", StaticFiles(directory=f"{FRONTEND_DIR}/css"), name="css")
+app.mount("/js", StaticFiles(directory=f"{FRONTEND_DIR}/js"), name="js")
+app.mount("/images", StaticFiles(directory=f"{FRONTEND_DIR}/images"), name="images")
 
 # =========================
 # INCLUDE API ROUTES
@@ -85,7 +93,9 @@ def signup_html():
 def dashboard_html():
     return FileResponse(os.path.join(FRONTEND_DIR, "dashboard.html"))
 
-# Suppress favicon error
+# =========================
+# FAVICON FIX
+# =========================
 @app.get("/favicon.ico", include_in_schema=False)
 def favicon():
     ico = os.path.join(FRONTEND_DIR, "favicon.ico")
@@ -99,4 +109,3 @@ def favicon():
 @app.get("/health")
 def health():
     return {"status": "ok"}
-
