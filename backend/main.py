@@ -44,8 +44,7 @@ app.add_middleware(
 # PATHS
 # =========================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-FRONTEND_DIR = os.path.join(BASE_DIR, "..", "frontend")
-FRONTEND_DIR = os.path.abspath(FRONTEND_DIR)
+FRONTEND_DIR = os.path.join(BASE_DIR, "frontend")
 
 # =========================
 # ✅ STATIC FILES FIX (IMPORTANT)
